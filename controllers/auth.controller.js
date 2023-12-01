@@ -2,6 +2,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const { JWT_SECRET, JWT_EXPIRES_IN } = require("../config/constants");
+
 //create dummy users for testing.
 // https://bcrypt-generator.com/ for manually generating password hashes. 10 rounds.
 const users = [
@@ -32,25 +34,31 @@ const login = async (req, res) => {
   try {
     //if the flow has made it this far, let's check if the email exists in the db, then we can compare the password to the hashed password in the db.
 
-    //Until DB, check if the email is in the dummy users object.
+    //Until DB, check if the email is in the dummy users array.
     const user = users.find((user) => user.email === email);
 
-    //If there is a user, and the password matches the hashed password, then we can login the user.
+    //If there is a user, and the password matches the hashed password, then we can login the user, and sign a json web token to send to the client.
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
       );
 
-      return res.status(200).json({ message: { ...user, token } });
+      //remove the password before sending back user to client.
+      delete user.passwordHash;
+      delete user.password;
+
+      return res
+        .status(200)
+        .json({ message: "Login successful", user, token });
     }
     return res
       .status(401)
       .json({ error: "Invalid email or password." });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ msg: "Server Error" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
