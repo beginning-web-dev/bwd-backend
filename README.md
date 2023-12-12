@@ -8,6 +8,8 @@ Clone the repo and run `npm install` to install all dependencies.
 Create a `.env` file in the root of the project, this is where we will be storing all of our secrets, and add the following: 
 ```
 PORT=3001
+JWT_SECRET=CHECK_DISCORD/JIRA
+JWT_EXPIRES_IN=3d
 ```
 
 
